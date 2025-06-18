@@ -72,9 +72,11 @@ class FirebaseAdminServer {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
           imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
         },
       },
     }));
@@ -346,34 +348,36 @@ class FirebaseAdminServer {
             await loadStats();
         }
 
-        async function loadStats() {
-            try {
-                const response = await fetch(\`\${API_BASE}/api/v1/firestore/collections\`);
-                const data = await response.json();
-                const statsContainer = document.getElementById('stats-cards');
-                statsContainer.innerHTML = '';
-                if (data.success) {
-                    for (let collection of data.data.collections) {
-                        try {
-                            const countResponse = await fetch(\`\${API_BASE}/api/v1/firestore/collections/\${collection.id}/documents?limit=100\`);
-                            const countData = await countResponse.json();
-                            const count = countData.data?.documents?.length || 0;
-                            statsContainer.appendChild(createStatCard(collection.id, count));
-                        } catch (error) {
-                            statsContainer.appendChild(createStatCard(collection.id, '?'));
-                        }
-                    }
-                }
-            } catch (error) {
-                document.getElementById('stats-cards').innerHTML = '<div class="col-12"><div class="alert alert-danger">Error loading dashboard</div></div>';
-            }
-        }
+                 async function loadStats() {
+             try {
+                 const response = await fetch(API_BASE + '/api/v1/firestore/collections');
+                 const data = await response.json();
+                 const statsContainer = document.getElementById('stats-cards');
+                 statsContainer.innerHTML = '';
+                 if (data.success) {
+                     for (let collection of data.data.collections) {
+                         try {
+                             const countResponse = await fetch(API_BASE + '/api/v1/firestore/collections/' + collection.id + '/documents?limit=100');
+                             const countData = await countResponse.json();
+                             const count = countData.data?.documents?.length || 0;
+                             statsContainer.appendChild(createStatCard(collection.id, count));
+                         } catch (error) {
+                             console.error('Error loading ' + collection.id, error);
+                             statsContainer.appendChild(createStatCard(collection.id, '?'));
+                         }
+                     }
+                 }
+             } catch (error) {
+                 console.error('Error loading stats:', error);
+                 document.getElementById('stats-cards').innerHTML = '<div class="col-12"><div class="alert alert-danger">Error loading dashboard</div></div>';
+             }
+         }
 
         function createStatCard(name, count) {
             const col = document.createElement('div');
             col.className = 'col-md-3 mb-3';
             const icons = { users: 'fas fa-users text-primary', posts: 'fas fa-image text-success', places: 'fas fa-map-marker-alt text-info', messages: 'fas fa-comments text-warning', events: 'fas fa-calendar text-danger' };
-            col.innerHTML = \`<div class="stat-card p-4 text-center" onclick="showCollection('\${name}')"><i class="\${icons[name] || 'fas fa-database text-dark'} fa-3x mb-3"></i><h2 class="text-dark">\${count}</h2><h5 class="text-muted text-capitalize">\${name}</h5><small class="text-muted">Click to manage</small></div>\`;
+                         col.innerHTML = '<div class="stat-card p-4 text-center" onclick="showCollection(\\'' + name + '\\')"><i class="' + (icons[name] || 'fas fa-database text-dark') + ' fa-3x mb-3"></i><h2 class="text-dark">' + count + '</h2><h5 class="text-muted text-capitalize">' + name + '</h5><small class="text-muted">Click to manage</small></div>';
             return col;
         }
 
@@ -381,7 +385,7 @@ class FirebaseAdminServer {
             currentCollection = collectionName;
             hideAllSections();
             document.getElementById('data-view').style.display = 'block';
-            document.getElementById('collection-title').innerHTML = \`<i class="fas fa-table me-2"></i>\${collectionName.charAt(0).toUpperCase() + collectionName.slice(1)} Management\`;
+                         document.getElementById('collection-title').innerHTML = '<i class="fas fa-table me-2"></i>' + collectionName.charAt(0).toUpperCase() + collectionName.slice(1) + ' Management';
             updateActiveNav(collectionName);
             await loadCollectionData(collectionName);
         }
@@ -392,7 +396,7 @@ class FirebaseAdminServer {
             loading.style.display = 'block';
             table.style.display = 'none';
             try {
-                const response = await fetch(\`\${API_BASE}/api/v1/firestore/collections/\${collectionName}/documents\`);
+                                 const response = await fetch(API_BASE + '/api/v1/firestore/collections/' + collectionName + '/documents');
                 const data = await response.json();
                 if (data.success && data.data.documents?.length > 0) {
                     buildTable(data.data.documents);
@@ -414,16 +418,16 @@ class FirebaseAdminServer {
             const allKeys = new Set();
             documents.forEach(doc => Object.keys(doc.data).forEach(key => allKeys.add(key)));
             const keyHeaders = Array.from(allKeys).slice(0, 5);
-            header.innerHTML = '<th>ID</th>' + keyHeaders.map(key => \`<th>\${key}</th>\`).join('') + '<th width="120">Actions</th>';
+                         header.innerHTML = '<th>ID</th>' + keyHeaders.map(key => '<th>' + key + '</th>').join('') + '<th width="120">Actions</th>';
             body.innerHTML = documents.map(doc => {
                 const cells = keyHeaders.map(key => {
                     let value = doc.data[key];
                     if (typeof value === 'object') value = JSON.stringify(value);
                     if (typeof value === 'string' && value.length > 30) value = value.substring(0, 30) + '...';
-                    return \`<td>\${value || '-'}</td>\`;
-                }).join('');
-                const escapedData = JSON.stringify(doc.data).replace(/"/g, '&quot;');
-                return \`<tr><td><code>\${doc.id}</code></td>\${cells}<td><button class="btn btn-sm btn-primary btn-action" onclick="editItem('\${doc.id}', \${escapedData})"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger btn-action" onclick="deleteItemConfirm('\${doc.id}')"><i class="fas fa-trash"></i></button></td></tr>\`;
+                                         return '<td>' + (value || '-') + '</td>';
+                 }).join('');
+                 const escapedData = JSON.stringify(doc.data).replace(/"/g, '&quot;');
+                 return '<tr><td><code>' + doc.id + '</code></td>' + cells + '<td><button class="btn btn-sm btn-primary btn-action" onclick="editItem(\\'' + doc.id + '\\', ' + escapedData + ')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger btn-action" onclick="deleteItemConfirm(\\'' + doc.id + '\\')"><i class="fas fa-trash"></i></button></td></tr>';
             }).join('');
         }
 
@@ -431,7 +435,7 @@ class FirebaseAdminServer {
             currentItem = { id, data };
             hideAllSections();
             document.getElementById('edit-form').style.display = 'block';
-            document.getElementById('form-title').innerHTML = \`<i class="fas fa-edit me-2"></i>Edit \${currentCollection} - \${id}\`;
+                         document.getElementById('form-title').innerHTML = '<i class="fas fa-edit me-2"></i>Edit ' + currentCollection + ' - ' + id;
             buildEditForm(data);
         }
 
@@ -441,9 +445,9 @@ class FirebaseAdminServer {
                 let value = data[key];
                 if (typeof value === 'object') {
                     value = JSON.stringify(value, null, 2);
-                    return \`<div class="mb-3"><label class="form-label"><strong>\${key}</strong></label><textarea class="form-control" name="\${key}" rows="3">\${value || ''}</textarea></div>\`;
-                }
-                return \`<div class="mb-3"><label class="form-label"><strong>\${key}</strong></label><input type="text" class="form-control" name="\${key}" value="\${value || ''}" /></div>\`;
+                                         return '<div class="mb-3"><label class="form-label"><strong>' + key + '</strong></label><textarea class="form-control" name="' + key + '" rows="3">' + (value || '') + '</textarea></div>';
+                 }
+                 return '<div class="mb-3"><label class="form-label"><strong>' + key + '</strong></label><input type="text" class="form-control" name="' + key + '" value="' + (value || '') + '" /></div>';
             }).join('');
         }
 
@@ -455,23 +459,23 @@ class FirebaseAdminServer {
                 try { updateData[key] = value.startsWith('{') || value.startsWith('[') ? JSON.parse(value) : value; } catch { updateData[key] = value; }
             }
             try {
-                const response = await fetch(\`\${API_BASE}/api/v1/firestore/collections/\${currentCollection}/documents/\${currentItem.id}\`, {
+                                 const response = await fetch(API_BASE + '/api/v1/firestore/collections/' + currentCollection + '/documents/' + currentItem.id, {
                     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateData)
                 });
                 if (response.ok) { alert('✅ Updated successfully!'); showCollection(currentCollection); } else alert('❌ Error updating');
             } catch (error) { alert('❌ Error updating'); }
         });
 
-        function deleteItemConfirm(id) { if (confirm(\`Delete \${id}? This cannot be undone.\`)) deleteItemById(id); }
+                 function deleteItemConfirm(id) { if (confirm('Delete ' + id + '? This cannot be undone.')) deleteItemById(id); }
 
         async function deleteItemById(id) {
             try {
-                const response = await fetch(\`\${API_BASE}/api/v1/firestore/collections/\${currentCollection}/documents/\${id}\`, { method: 'DELETE' });
+                                 const response = await fetch(API_BASE + '/api/v1/firestore/collections/' + currentCollection + '/documents/' + id, { method: 'DELETE' });
                 if (response.ok) { alert('✅ Deleted successfully!'); loadCollectionData(currentCollection); } else alert('❌ Error deleting');
             } catch (error) { alert('❌ Error deleting'); }
         }
 
-        function deleteItem() { if (confirm(\`Delete this \${currentCollection}? This cannot be undone.\`)) deleteItemById(currentItem.id); }
+                 function deleteItem() { if (confirm('Delete this ' + currentCollection + '? This cannot be undone.')) deleteItemById(currentItem.id); }
         function refreshData() { if (currentCollection) loadCollectionData(currentCollection); }
         function hideAllSections() { document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none'); }
         function updateActiveNav(target) {
