@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: poppen-backend-admin
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: API_PREFIX
+        value: /api/v1
+      # Add your Firebase and other environment variables here
+      # These should be set in the Render dashboard for security
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_STORAGE_BUCKET
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://your-frontend-domain.com
+      - key: DEBUG_MODE
+        value: false
+      - key: ENABLE_SWAGGER
+        value: false
+    autoDeploy: true
+    repo: https://github.com/yourusername/poppen-backend-admin.git
+    branch: main
+    rootDir: .
+    region: oregon
+    disk:
+      name: data
+      mountPath: /opt/render/project/logs
+      sizeGB: 1 

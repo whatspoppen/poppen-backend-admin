@@ -1,0 +1,69 @@
+runtime: nodejs18
+service: default
+
+env_variables:
+  NODE_ENV: production
+  PORT: 8080
+  HOST: 0.0.0.0
+  API_PREFIX: /api/v1
+  
+  # Firebase Configuration (set these in GCP Console or replace with actual values)
+  FIREBASE_PROJECT_ID: your-firebase-project-id
+  FIREBASE_PRIVATE_KEY_ID: your-private-key-id
+  FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nYour-Private-Key-Content\n-----END PRIVATE KEY-----\n"
+  FIREBASE_CLIENT_EMAIL: firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+  FIREBASE_CLIENT_ID: your-client-id
+  FIREBASE_AUTH_URI: https://accounts.google.com/o/oauth2/auth
+  FIREBASE_TOKEN_URI: https://oauth2.googleapis.com/token
+  FIREBASE_AUTH_PROVIDER_X509_CERT_URL: https://www.googleapis.com/oauth2/v1/certs
+  FIREBASE_CLIENT_X509_CERT_URL: https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-xxxxx%40your-project.iam.gserviceaccount.com
+  FIREBASE_STORAGE_BUCKET: your-project-id.appspot.com
+  
+  # Security
+  JWT_SECRET: your-production-jwt-secret-generate-strong-random-key
+  JWT_EXPIRES_IN: 24h
+  BCRYPT_ROUNDS: 12
+  SESSION_SECRET: your-production-session-secret
+  
+  # Rate Limiting
+  RATE_LIMIT_WINDOW_MS: 900000
+  RATE_LIMIT_MAX_REQUESTS: 100
+  
+  # CORS (update with your actual domain)
+  CORS_ORIGIN: https://yourdomain.com,https://www.yourdomain.com
+  CORS_CREDENTIALS: true
+  
+  # MCP Configuration
+  MCP_TRANSPORT: stdio
+  MCP_HTTP_PORT: 3001
+  MCP_HTTP_HOST: localhost
+  MCP_HTTP_PATH: /mcp
+  DEBUG_LOG_FILE: false
+  
+  # Admin User
+  ADMIN_EMAIL: admin@yourdomain.com
+  ADMIN_PASSWORD: secure-admin-password-change-this
+  
+  # Logging
+  LOG_LEVEL: info
+  LOG_FILE_PATH: ./logs/app.log
+  
+  # Production settings
+  DEBUG_MODE: false
+  ENABLE_SWAGGER: false
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 10
+  target_cpu_utilization: 0.6
+
+resources:
+  cpu: 1
+  memory_gb: 0.5
+  disk_size_gb: 10
+
+handlers:
+- url: /.*
+  script: auto
+  secure: always
+  redirect_http_response_code: 301 

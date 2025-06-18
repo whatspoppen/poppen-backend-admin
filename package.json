@@ -1,0 +1,69 @@
+{
+  "name": "poppen-backend-admin",
+  "version": "1.0.0",
+  "description": "Firebase Admin Backend System with MCP Integration",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "mcp:start": "node src/mcp/firebase-mcp-server.js",
+    "mcp:test": "node src/mcp/test-mcp.js",
+    "setup": "node scripts/setup-firebase.js",
+    "deploy": "./scripts/deploy-commands.sh",
+    "deploy:gcp": "gcloud app deploy app.yaml --quiet",
+    "deploy:heroku": "git push heroku main",
+    "deploy:railway": "railway up",
+    "build": "echo 'No build step required for Node.js'",
+    "postinstall": "mkdir -p logs"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "firebase-admin": "^12.0.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "compression": "^1.7.4",
+    "winston": "^3.11.0",
+    "socket.io": "^4.7.4",
+    "@gannonh/firebase-mcp": "^1.4.9",
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.1",
+    "@types/node": "^20.10.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "firebase",
+    "admin",
+    "backend",
+    "mcp",
+    "crud",
+    "api",
+    "express",
+    "nodejs"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/poppen-backend-admin.git"
+  }
+} 
