@@ -18,7 +18,9 @@
     "deploy:heroku": "git push heroku main",
     "deploy:railway": "railway up",
     "build": "echo 'No build step required for Node.js'",
-    "postinstall": "mkdir -p logs"
+    "postinstall": "mkdir -p logs",
+    "git:push": "git add . && git commit -m 'Update deployment configurations' && git push",
+    "git:status": "git status"
   },
   "dependencies": {
     "express": "^4.18.2",
